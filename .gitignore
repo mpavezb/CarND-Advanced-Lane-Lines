@@ -1,6 +1,10 @@
 # Picklefiles
 *.p
 
+# virtualenv
+env/
+venv/
+
 # Created by https://www.gitignore.io/api/video,python,jupyternotebooks
 # Edit at https://www.gitignore.io/?templates=video,python,jupyternotebooks
 
