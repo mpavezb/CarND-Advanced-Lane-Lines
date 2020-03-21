@@ -1,5 +1,4 @@
 from src.logger import Log
-from src.recorder import Recorder
 from src.calibration import CalibrationParameters, CameraModel
 
 
@@ -11,14 +10,21 @@ def RunCalibration(display=True):
 
     camera = CameraModel(params)
     camera.calibrate()
-    objpoints, imgpoints = camera.get_calibration()
 
-    Recorder.save_calibration(objpoints, imgpoints)
-    return objpoints, imgpoints
+    # getting the points
+    objpoints, imgpoints = camera.get_3d_to_2d_points()
+
+    return camera
 
 
 def main():
-    objpoints, imgpoints = RunCalibration(display=False)
+    Log.debug_enabled = False
+
+    camera = RunCalibration(display=False)
+
+    h = 100
+    w = 200
+    camera.get_calibration(w, h)
 
     # wait for user to finish program
     # plt.waitforbuttonpress()

@@ -4,10 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from .logger import Log
+from .cache import Cache
 
 
 class CalibrationParameters:
     glob = "camera_cal/calibration*.jpg"
+    pickle = "calibration.p"
     nx = 9
     ny = 6
     display = False
@@ -20,13 +22,39 @@ class CameraModel:
     objpoints = []  # 3d points in real world space
     imgpoints = []  # 2d points in image plane.
 
+    # Calibration
+    cal_w = None
+    cal_h = None
+    mtx = None
+    dist = None
+
     def __init__(self, parameters):
         self.nx = parameters.nx
         self.ny = parameters.ny
         self.images = glob.glob(parameters.glob)
         self.display = parameters.display
 
+        # cache
+        self.cache = Cache(parameters.pickle)
+
+    def save(self):
+        data = dict()
+        data["objpoints"] = self.objpoints
+        data["imgpoints"] = self.imgpoints
+        self.cache.save(data)
+
+    def load(self):
+        if self.cache.exists():
+            data = self.cache.load()
+            self.objpoints = data["objpoints"]
+            self.imgpoints = data["imgpoints"]
+            return True
+        return False
+
     def calibrate(self):
+        if self.load():
+            return
+
         Log.subsection("Running calibration on %d images ..." % len(self.images))
 
         # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
@@ -44,7 +72,9 @@ class CameraModel:
                 Log.warn(
                     "cv2.findChessboardCorners was not able to process file: %s" % fname
                 )
-        Log.success()
+
+        # Update cache
+        self.save()
 
     def calibrate_single(self, img, objp):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -73,5 +103,21 @@ class CameraModel:
             img = cv2.drawChessboardCorners(img, (self.nx, self.ny), corners, ret)
             plt.imshow(img)
 
-    def get_calibration(self):
+    def get_3d_to_2d_points(self):
         return self.objpoints, self.imgpoints
+
+    def get_calibration(self, w, h):
+        # Use cached
+        if w is self.cal_w and h is self.cal_h:
+            Log.debug("Using Cached")
+            return self.mtx, self.dist
+        Log.debug("Computing")
+
+        # Compute
+        [_, self.mtx, self.dist, _, _] = cv2.calibrateCamera(
+            self.objpoints, self.imgpoints, (w, h), None, None
+        )
+
+        self.cal_w = w
+        self.cal_h = h
+        return self.mtx, self.dist
