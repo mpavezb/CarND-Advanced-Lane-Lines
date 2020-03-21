@@ -61,7 +61,6 @@ def RunDistortionCorrectionExample(camera):
         axs[idx, 1].axis("off")
 
     plt.show()
-    Log.success()
 
 
 def main():
