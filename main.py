@@ -6,14 +6,15 @@ from src.logger import Log
 from src.calibration import CalibrationParameters, CameraModel
 
 
-def RunCalibration(display=True):
+def RunCalibration(display=False):
     Log.section("Camera Calibration")
 
     params = CalibrationParameters()
-    params.display = display
-
     camera = CameraModel(params)
     camera.calibrate()
+
+    if display:
+        camera.display_calibration()
 
     # getting the points
     objpoints, imgpoints = camera.get_3d_to_2d_points()
@@ -65,8 +66,8 @@ def RunDistortionCorrectionExample(camera):
 
 def main():
     Log.debug_enabled = False
-    camera = RunCalibration(display=False)
-    RunDistortionCorrectionExample(camera)
+    camera = RunCalibration(display=True)
+    # RunDistortionCorrectionExample(camera)
 
     # wait for user to finish program
     plt.waitforbuttonpress()
