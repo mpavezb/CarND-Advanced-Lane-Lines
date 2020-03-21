@@ -7,6 +7,9 @@ except ImportError:
 
 
 class Log:
+
+    debug_enabled = False
+
     def section(text):
         print("=" * 40)
         cprint(text, "white", attrs=["bold"])
@@ -17,6 +20,10 @@ class Log:
 
     def info(text):
         cprint(" - %s" % text, "white")
+
+    def debug(text):
+        if Log.debug_enabled:
+            cprint(" - %s" % text, "grey", attrs=["bold"])
 
     def warn(text):
         cprint(" !! %s" % text, "yellow")
