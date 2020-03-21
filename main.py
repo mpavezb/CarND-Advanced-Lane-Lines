@@ -26,7 +26,7 @@ def RunDistortionCorrectionExample(camera):
 
     # Make a list of test images
     #   Here I selected some chessboard images, were the distortion
-    #   correction is notorious.
+    #   correction result is notorious.
     images = [
         "camera_cal/calibration1.jpg",
         "camera_cal/calibration2.jpg",
@@ -34,13 +34,13 @@ def RunDistortionCorrectionExample(camera):
         "camera_cal/calibration4.jpg",
     ]
 
-    print("> Correct Distortion on sample images:")
-    fig = plt.figure(figsize=(24, 9))
-    # ax1.set_title("Original Image", fontsize=50)
-    # ax2.set_title("Undistorted Image", fontsize=50)
+    Log.subsection("Correct Distortion on sample images")
+
+    fig, axs = plt.subplots(nrows=4, ncols=2, figsize=(10, 10))
     fig.tight_layout()
-    fig_cnt = 0
-    for fname in images:
+    axs[0, 0].set_title("Original Image")
+    axs[0, 1].set_title("Undistorted Image")
+    for idx, fname in enumerate(images):
         Log.info("file: " + fname)
 
         # Read grayscale
@@ -54,13 +54,12 @@ def RunDistortionCorrectionExample(camera):
         undistorted = cv2.undistort(img, mtx, dist, None, mtx)
 
         # Display Comparison
-        fig_cnt = fig_cnt + 1
-        fig.add_subplot(4, 2, 2 * fig_cnt - 1)
-        plt.imshow(img)
+        axs[idx, 0].imshow(img)
+        axs[idx, 1].imshow(undistorted)
+        axs[idx, 0].axis("off")
+        axs[idx, 1].axis("off")
 
-        fig.add_subplot(4, 2, 2 * fig_cnt)
-        plt.imshow(undistorted)
-
+    plt.show()
     Log.success()
 
 
