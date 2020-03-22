@@ -1,3 +1,5 @@
+import os
+import math
 import glob
 import cv2
 import numpy as np
@@ -5,10 +7,11 @@ import matplotlib.pyplot as plt
 
 from .logger import Log
 from .cache import Cache
+from .save import save_image
 
 
 class CalibrationParameters:
-    glob = "camera_cal/calibration*.jpg"
+    images = glob.glob("camera_cal/calibration*.jpg")
     pickle = "calibration.p"
     nx = 9
     ny = 6
@@ -31,7 +34,7 @@ class CameraModel:
     def __init__(self, parameters):
         self.nx = parameters.nx
         self.ny = parameters.ny
-        self.target_images = glob.glob(parameters.glob)
+        self.target_images = parameters.images
 
         # cache
         self.cache = Cache(parameters.pickle)
@@ -88,7 +91,12 @@ class CameraModel:
             )
 
     def display_calibration(self):
-        fig = plt.figure(1, figsize=(20, 15))
+        n_images = len(self.images)
+        n_columns = 4
+        n_rows = math.ceil(n_images / 4)
+
+        f, axs = plt.subplots(n_rows, n_columns, figsize=(40, 30))
+        f.tight_layout()
 
         # Draw and display the corners
         for idx, fname in enumerate(self.images):
@@ -98,10 +106,26 @@ class CameraModel:
                 img, (self.nx, self.ny), self.imgpoints[idx], True
             )
 
-            # plot
-            fig.add_subplot(5, 4, idx + 1)
-            plt.imshow(chessboard)
-            plt.axis("off")
+            # save to file
+            save_image(chessboard, fname, "calibration_")
+
+            col = idx % n_columns
+            row = math.floor(idx / n_columns)
+            axs[row, col].imshow(chessboard)
+            axs[row, col].axis("off")
+
+        # Make sure to clean empty placeholders
+        for idx in range(n_images, n_rows * n_columns):
+            col = idx % n_columns
+            row = math.floor(idx / n_columns)
+            axs[row, col].axis("off")
+
+        out_fname = os.path.join("output_images", "calibration.png")
+        Log.info("Saving figure to %s" % out_fname)
+        plt.savefig(out_fname)
+
+        Log.info("Display")
+        plt.show()
 
     def get_3d_to_2d_points(self):
         return self.objpoints, self.imgpoints
@@ -128,3 +152,10 @@ class CameraModel:
         [mtx, dist] = self.get_calibration(w, h)
         undistorted = cv2.undistort(img, mtx, dist, None, mtx)
         return undistorted
+
+
+def GetCalibratedCamera():
+    params = CalibrationParameters()
+    camera = CameraModel(params)
+    camera.calibrate()
+    return camera
