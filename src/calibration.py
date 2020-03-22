@@ -121,3 +121,10 @@ class CameraModel:
         self.cal_w = w
         self.cal_h = h
         return self.mtx, self.dist
+
+    def undistort(self, img):
+        w = img.shape[1]
+        h = img.shape[0]
+        [mtx, dist] = self.get_calibration(w, h)
+        undistorted = cv2.undistort(img, mtx, dist, None, mtx)
+        return undistorted
