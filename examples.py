@@ -5,20 +5,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from src.logger import Log
-from src.calibration import GetCalibratedCamera
+from src.calibration import GetCalibratedCamera, WarpMachine
 from src.filtering import EdgeDetector
-from src.lane_fitting import fit_polynomial
+from src.lane_fitting import LaneFit
 from src.save import save_image
 
 
 def RunCalibrationExample():
-    Log.section("Camera Calibration")
+    Log.section("Camera Calibration Example")
     camera = GetCalibratedCamera()
     camera.display_calibration()
 
 
 def RunDistortionCorrectionExample():
-    Log.section("Distortion Correction")
+    Log.section("Distortion Correction Example")
     camera = GetCalibratedCamera()
 
     # Make a list of test images
@@ -36,16 +36,18 @@ def RunDistortionCorrectionExample():
     f, axs = plt.subplots(len(images), 1, figsize=(10, 10))
     f.tight_layout()
     axs[0].set_title("Original and Undistorted Images", fontsize=15)
-    for idx, fname in enumerate(images):
-        # Read grayscale
-        Log.info("image: " + fname)
+    for idx, fname in enumerate(sorted(images)):
+        # Read
+        Log.subsection("Processing image: " + fname)
         img_ = cv2.imread(fname)
         img = cv2.cvtColor(img_, cv2.COLOR_BGR2RGB)
 
-        # Distortion Correction
+        # Apply distortion correction
+        Log.info("Distortion correction ...")
         undistorted = camera.undistort(img)
 
         # Concatenate
+        Log.info("Drawing ...")
         vis = np.concatenate((img, undistorted), axis=1)
 
         # Display Comparison
@@ -67,7 +69,11 @@ def RunEdgeDetectionExample():
     Log.section("EdgeDetection")
     camera = GetCalibratedCamera()
     images = glob.glob("test_images/*.jpg")
-    for idx, fname in enumerate(images):
+
+    f, axs = plt.subplots(len(images), 1, figsize=(20, 70))
+    f.tight_layout()
+    for idx, fname in enumerate(sorted(images)):
+        # Read
         Log.subsection("Processing image: %s" % fname)
         image = cv2.imread(fname)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -82,55 +88,40 @@ def RunEdgeDetectionExample():
         binary = edge_detector.detect(image)
 
         # Display and Save Results
-        Log.info("Display Results ...")
-        plt.figure(idx)
-        edge_detector.display_pipeline(fname)
+        Log.info("Drawing ...")
+        edge_detector.display_pipeline(fname, axs[idx])
+
+    Log.subsection("Display")
     plt.show()
 
 
-def warp(image):
-    h = 720
-    left = 220
-    right = 1110
-    top = 460
-    top_left = 585
-    top_right = 702
-
-    src = np.float32([[left, h], [top_left, top], [top_right, top], [right, h]])
-    dst = np.float32([[left, h], [left, 0], [right, 0], [right, h]])
-
-    img_size = (image.shape[1], image.shape[0])
-    M = cv2.getPerspectiveTransform(src, dst)
-    warped = cv2.warpPerspective(image, M, img_size, flags=cv2.INTER_LINEAR)
-
-    return warped, src, dst
-
-
 def RunPerspectiveTransformExample():
-    Log.section("Perspective Transform")
+    Log.section("Perspective Transform Example")
     camera = GetCalibratedCamera()
-
-    # image set
+    warper = WarpMachine()
     images = glob.glob("test_images/*.jpg")
 
-    # Correct distortion save and display results
-    Log.subsection("Apply warp to sample images")
-    f, axs = plt.subplots(len(images), 1, figsize=(10, 10))
+    f, axs = plt.subplots(len(images), 1, figsize=(20, 50))
     f.tight_layout()
     axs[0].set_title("Undistorted and Warped Images", fontsize=15)
-    for idx, fname in enumerate(images):
+    for idx, fname in enumerate(sorted(images)):
         # Read
-        Log.info("image: " + fname)
+        Log.subsection("Processing image: " + fname)
         image = cv2.imread(fname)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Warp
+        # Apply distortion correction
+        Log.info("Distortion correction ...")
         undistorted = camera.undistort(image)
-        warped, src, dst = warp(undistorted)
+
+        # Warp Image
+        Log.info("Perspective Transform ...")
+        warped = warper.warp(undistorted)
 
         # Draw
-        cv2.polylines(undistorted, [np.int32(src)], 1, (255, 0, 0), thickness=1)
-        cv2.polylines(warped, [np.int32(dst)], 1, (255, 0, 0), thickness=1)
+        Log.info("Drawing ...")
+        warper.draw_src(undistorted)
+        warper.draw_dst(warped)
 
         # Concatenate
         vis = np.concatenate((undistorted, warped), axis=1)
@@ -142,10 +133,6 @@ def RunPerspectiveTransformExample():
         # Save
         save_image(vis, fname, "warp_")
 
-    out_fname = os.path.join("output_images", "warp.png")
-    Log.subsection("Saving figure to %s" % out_fname)
-    plt.savefig(out_fname)
-
     Log.subsection("Display")
     plt.show()
 
@@ -153,13 +140,14 @@ def RunPerspectiveTransformExample():
 def RunLaneFittingExample():
     Log.section("Lane Fitting Example")
     camera = GetCalibratedCamera()
+    warper = WarpMachine()
     images = glob.glob("test_images/*.jpg")
 
-    f, axs = plt.subplots(len(images), 1, figsize=(10, 10))
+    f, axs = plt.subplots(len(images), 1, figsize=(20, 50))
     f.tight_layout()
     axs[0].set_title("Undistorted Image and Lane Fitting", fontsize=15)
-    for idx, fname in enumerate(images):
-        # fname = "test_images/straight_lines1.jpg"
+    for idx, fname in enumerate(sorted(images)):
+        # Read
         Log.subsection("Processing image: %s" % fname)
         image = cv2.imread(fname)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -175,11 +163,39 @@ def RunLaneFittingExample():
 
         # Warp Image
         Log.info("Perspective Transform ...")
-        warped, _, _ = warp(binary)
+        warped = warper.warp(binary)
 
         # Lane Fitting
         Log.info("Lane Fitting ...")
-        out_img = fit_polynomial(warped)
+        lane_fitting = LaneFit(image.shape[1], image.shape[0])
+        _, _, out_img = lane_fitting.fit_polynomial(warped)
+
+        # Lane Curvature
+        left_cr_px, right_cr_px = lane_fitting.get_curvature_px()
+        left_cr, right_cr = lane_fitting.get_curvature()
+
+        pos = lane_fitting.get_vehicle_position()
+        pos_str = "Left" if pos < 0 else "Right"
+        crl_text = "Radius of curvature (left) = %d m" % left_cr
+        crr_text = "Radius of curvature (right) = %d m" % right_cr
+        cr_text = "Radius of curvature (avg) = %d m" % ((left_cr + right_cr) / 2)
+        pos_text = "Vehicle is %.1f m %s from the lane center" % (np.abs(pos), pos_str)
+        Log.info(crl_text)
+        Log.info(crr_text)
+        Log.info(cr_text)
+        Log.info(pos_text)
+
+        # Drawing
+        Log.info("Drawing ...")
+
+        def put_text(image, text, color=(0, 255, 255), ypos=100):
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(image, text, (350, ypos), font, 1, color, 2, cv2.LINE_AA)
+
+        put_text(out_img, crl_text, ypos=50)
+        put_text(out_img, crr_text, ypos=100)
+        put_text(out_img, cr_text, ypos=150)
+        put_text(out_img, pos_text, ypos=200)
 
         # Concatenate
         vis = np.concatenate((undistorted, out_img), axis=1)

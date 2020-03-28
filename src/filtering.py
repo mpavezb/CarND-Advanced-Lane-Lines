@@ -140,16 +140,15 @@ class EdgeDetector(object):
 
         return vis
 
-    def display_result(self, fname):
+    def display_result(self, fname, ax):
         vis = self.build_result_vis()
 
         # save
         save_image(vis, fname, "edge_detection_", "_result")
 
         # show
-        plt.imshow(vis)
-        plt.suptitle("Edge Detection Result", fontsize=15)
-        plt.axis("off")
+        ax.imshow(vis)
+        ax.axis("off")
 
     def display_hls(self):
         """image + s_channel + s_binary"""
@@ -159,7 +158,7 @@ class EdgeDetector(object):
         """image + sx/thresh + sy/thresh + smag/thresh + sdir/thresh + XY + MD + ALL"""
         pass
 
-    def display_pipeline(self, fname):
-        self.display_result(fname)
+    def display_pipeline(self, fname, ax):
+        self.display_result(fname, ax)
         self.display_sobel()
         self.display_hls()

@@ -159,3 +159,34 @@ def GetCalibratedCamera():
     camera = CameraModel(params)
     camera.calibrate()
     return camera
+
+
+class WarpMachine:
+    h = 720
+    left = 220
+    right = 1110
+    top = 460
+    top_left = 585
+    top_right = 702
+
+    def __init__(self):
+        h = self.h
+        l = self.left
+        r = self.right
+        t = self.top
+        tl = self.top_left
+        tr = self.top_right
+
+        self.src = np.float32([[l, h], [tl, t], [tr, t], [r, h]])
+        self.dst = np.float32([[l, h], [l, 0], [r, 0], [r, h]])
+        self.M = cv2.getPerspectiveTransform(self.src, self.dst)
+
+    def warp(self, image):
+        img_size = (image.shape[1], image.shape[0])
+        return cv2.warpPerspective(image, self.M, img_size, flags=cv2.INTER_LINEAR)
+
+    def draw_src(self, image):
+        cv2.polylines(image, [np.int32(self.src)], 1, (255, 0, 0), thickness=5)
+
+    def draw_dst(self, image):
+        cv2.polylines(image, [np.int32(self.dst)], 1, (255, 0, 0), thickness=5)
