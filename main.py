@@ -8,7 +8,8 @@ def main():
     # RunDistortionCorrectionExample()
     # RunEdgeDetectionExample()
     # RunPerspectiveTransformExample()
-    RunLaneFittingExample()
+    # RunLaneFittingExample()
+    RunFullPipelineExample()
 
 
 if __name__ == "__main__":

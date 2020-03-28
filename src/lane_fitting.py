@@ -136,7 +136,7 @@ class LaneFit(object):
 
         # Visualization
         self.draw_lanes(out_img, leftx, lefty, rightx, righty)
-        return self.left_fit, self.right_fit, out_img
+        return out_img
 
     def draw_polyfit(self, image, fit):
         try:
@@ -146,6 +146,12 @@ class LaneFit(object):
             cv2.polylines(image, [points], False, color=(255, 255, 0), thickness=10)
         except TypeError:
             print("The function failed to fit a line!")
+
+    def get_fitpoints(self):
+        points_y = list(range(self.image_height))
+        left_fitx = np.polyval(self.left_fit, points_y)
+        right_fitx = np.polyval(self.right_fit, points_y)
+        return points_y, left_fitx, right_fitx
 
     def draw_lanes(self, image, leftx, lefty, rightx, righty):
         # Colors in the left and right lane regions
