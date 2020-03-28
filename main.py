@@ -23,6 +23,7 @@ def main():
     # RunDistortionCorrectionExample()
     # RunEdgeDetectionExample()
     # RunPerspectiveTransformExample()
+    RunLaneFittingExample()
 
 
 if __name__ == "__main__":

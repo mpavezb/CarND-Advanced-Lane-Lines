@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from src.logger import Log
 from src.calibration import GetCalibratedCamera
 from src.filtering import EdgeDetector
+from src.lane_fitting import fit_polynomial
 from src.save import save_image
 
 
@@ -60,7 +61,6 @@ def RunDistortionCorrectionExample():
 
     Log.subsection("Display")
     plt.show()
-    Log.success()
 
 
 def RunEdgeDetectionExample():
@@ -90,13 +90,14 @@ def RunEdgeDetectionExample():
 
 def warp(image):
     h = 720
-    l = 220
-    r = 1110
-    t = 440
-    tl = 610
-    tr = 670
-    src = np.float32([[l, h], [tl, t], [tr, t], [r, h]])
-    dst = np.float32([[l, h], [l, 0], [r, 0], [r, h]])
+    left = 220
+    right = 1110
+    top = 460
+    top_left = 585
+    top_right = 702
+
+    src = np.float32([[left, h], [top_left, top], [top_right, top], [right, h]])
+    dst = np.float32([[left, h], [left, 0], [right, 0], [right, h]])
 
     img_size = (image.shape[1], image.shape[0])
     M = cv2.getPerspectiveTransform(src, dst)
@@ -147,4 +148,48 @@ def RunPerspectiveTransformExample():
 
     Log.subsection("Display")
     plt.show()
-    Log.success()
+
+
+def RunLaneFittingExample():
+    Log.section("Lane Fitting Example")
+    camera = GetCalibratedCamera()
+    images = glob.glob("test_images/*.jpg")
+
+    f, axs = plt.subplots(len(images), 1, figsize=(10, 10))
+    f.tight_layout()
+    axs[0].set_title("Undistorted Image and Lane Fitting", fontsize=15)
+    for idx, fname in enumerate(images):
+        # fname = "test_images/straight_lines1.jpg"
+        Log.subsection("Processing image: %s" % fname)
+        image = cv2.imread(fname)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Apply distortion correction
+        Log.info("Distortion correction ...")
+        undistorted = camera.undistort(image)
+
+        # Detect Edges
+        Log.info("Edge Detection ...")
+        edge_detector = EdgeDetector()
+        binary = edge_detector.detect(image)
+
+        # Warp Image
+        Log.info("Perspective Transform ...")
+        warped, _, _ = warp(binary)
+
+        # Lane Fitting
+        Log.info("Lane Fitting ...")
+        out_img = fit_polynomial(warped)
+
+        # Concatenate
+        vis = np.concatenate((undistorted, out_img), axis=1)
+
+        # Display Comparison
+        axs[idx].imshow(vis)
+        axs[idx].axis("off")
+
+        # Save
+        save_image(vis, fname, "lane_fitting_")
+
+    Log.subsection("Display")
+    plt.show()
