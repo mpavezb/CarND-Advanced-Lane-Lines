@@ -10,13 +10,6 @@ from .cache import Cache
 from .save import save_image
 
 
-class CalibrationParameters:
-    images = glob.glob("camera_cal/calibration*.jpg")
-    pickle = "calibration.p"
-    nx = 9
-    ny = 6
-
-
 class CameraModel:
     """Computes objpoints,imgpoints pair based on chessboard images for calibration"""
 
@@ -31,13 +24,13 @@ class CameraModel:
     mtx = None
     dist = None
 
-    def __init__(self, parameters):
-        self.nx = parameters.nx
-        self.ny = parameters.ny
-        self.target_images = parameters.images
+    def __init__(self):
+        self.nx = 9
+        self.ny = 6
+        self.target_images = glob.glob("camera_cal/calibration*.jpg")
 
         # cache
-        self.cache = Cache(parameters.pickle)
+        self.cache = Cache("calibration.p")
 
     def save(self):
         data = dict()
@@ -134,7 +127,10 @@ class CameraModel:
         # Use cached
         if w == self.cal_w and h == self.cal_h:
             return self.mtx, self.dist
-        Log.info("Computing camera calibration parameters for (w,h)=(%d,%d)" % (w, h))
+        Log.info(
+            "Computing camera matrix and distortion coefficients for (w,h)=(%d,%d)"
+            % (w, h)
+        )
 
         # Compute
         [_, self.mtx, self.dist, _, _] = cv2.calibrateCamera(
@@ -155,8 +151,7 @@ class CameraModel:
 
 
 def GetCalibratedCamera():
-    params = CalibrationParameters()
-    camera = CameraModel(params)
+    camera = CameraModel()
     camera.calibrate()
     return camera
 

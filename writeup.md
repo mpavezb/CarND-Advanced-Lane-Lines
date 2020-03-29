@@ -1,14 +1,11 @@
 # Writeup
 
-## Overview
-
 This document explains how each step of the pipeline was addressed. The explanation is focused on describing how each rubric point was implemented.
 
 - [README:Project Goals](./README#project-goals)
 - [README:Setting Up](./README#running-the-project)
 - [Rubric Points](https://review.udacity.com/#!/rubrics/571/view)
 
----
 
 [//]: # (Image References)
 
@@ -22,17 +19,34 @@ This document explains how each step of the pipeline was addressed. The explanat
 
 ---
 
+## IPython Notebook
+
+Each section on the IPython notebook `main.ipynb` provides ready-to-run examples for each step of the pipeline, over single images and the full video. 
+
+Please, make sure to run the first cell `IPython Notebook Configuration` when the notebook is loaded. 
+
+All example sections are independent from each other, thus, they can be run in any order.
+
 ## Camera Calibration
 
 ### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-The code for this step is contained in the first code cell of the IPython notebook located in "./examples/example.ipynb" (or in lines # through # of the file called `some_file.py`).  
+The camera calibration functions are provided by the `CameraModel` class, located in `./src/calibration.py` file. The related section on the notebook is `1. Camera calibration using chessboard images`.
 
-I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
+First, the `CameraModel.calibrate()` method is used to:
+1. Prepare the *object points* to be the (x, y, z) coordinates of the chessboard corners in the world. z is assumed to be 0.
+2. Iterate through calibration images, looking for corners with `cv2.findChessboardCorners()` on gray images.
+3. If corners are detected, then these are appended to the list of matches: 3D points (`self.objpoints`) and 2D corners (`self.imgpoints`).
+4. A pickle file is created to keep a cache of all found 2D/3D points. Next time, if the cache is available, the calibration will be skipped.
 
-I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
+Then, the `CameraModel.get_calibration()` method is used to retrieve the camera matrix and distortion coefficients required to correct undistorted images. These are computed by the `cv2.calibrateCamera()` function, based on the 2D/3D points found in the calibration step. As this computation only depends on the image size, the computation is cached for the last image (width, height) pair.
 
-![alt text][image1]
+Finally, any given image can be *undistorted* using the `CameraModel.undistort()` method. This runs the `cv2.undistort()` function to correct the distortion on the image.
+
+Next figure shows all chessboard images used for calibration, for which opencv was able to find corners, annotated with the `cv2.drawChessboardCorners()` function.
+
+![calibration example][./output_images/calibration.png]
+
 
 ## Pipeline (single images)
 
@@ -40,6 +54,8 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
 ![alt text][image2]
+
+![distortion correction example][./output_images/distortion_correction.png]
 
 ### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
