@@ -2,8 +2,8 @@
 
 This document explains how each step of the pipeline was addressed. The explanation is focused on describing how each rubric point was implemented.
 
-- [README:Project Goals](./README#project-goals)
-- [README:Setting Up](./README#running-the-project)
+- [README:Project Goals](./README.md#project-goals)
+- [README:Setting Up](./README.md#running-the-project)
 - [Rubric Points](https://review.udacity.com/#!/rubrics/571/view)
 
 
@@ -45,7 +45,7 @@ Finally, any given image can be *undistorted* using the `CameraModel.undistort()
 
 Next figure shows all chessboard images used for calibration, for which opencv was able to find corners, annotated with the `cv2.drawChessboardCorners()` function.
 
-![calibration example][./output_images/calibration.png]
+![calibration example](./output_images/calibration.png)
 
 
 ## Pipeline (single images)
