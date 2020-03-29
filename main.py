@@ -19,9 +19,9 @@ def main():
     # RunCalibrationExample()
     # RunDistortionCorrectionExample()
     # RunEdgeDetectionExample()
-    RunPerspectiveTransformExample()
+    # RunPerspectiveTransformExample()
     # RunLaneFittingExample()
-    # RunFullPipelineExample()
+    RunFullPipelineExample()
 
     # ProcessProjectVideo(subclip_seconds=0.5)
 

@@ -10,6 +10,50 @@ from .save import chmod_rw_all, delete_file
 from .profiler import Profiler
 
 
+def draw_overlay(warper, lane_fitting, undistorted, warped):
+    # get curvature and vehicle position
+    left_cr, right_cr = lane_fitting.get_curvature()
+    pos = lane_fitting.get_vehicle_position()
+
+    # get fitpoints
+    pts_y, left_fitx, right_fitx = lane_fitting.get_fitpoints()
+
+    # Create an image to draw the lines on
+    warp_zero = np.zeros_like(warped).astype(np.uint8)
+    color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
+
+    # Recast the x and y points into usable format for cv2.fillPoly()
+    pts_left = np.array([np.transpose(np.vstack([left_fitx, pts_y]))])
+    pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, pts_y])))])
+    pts = np.hstack((pts_left, pts_right))
+
+    # Draw the lane onto the warped blank image
+    cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
+
+    # Warp the blank back to original image space using inverse perspective matrix (Minv)
+    overlay = warper.unwarp(color_warp)
+
+    # Combine the result with the original image
+    vis_overlay = cv2.addWeighted(undistorted, 1, overlay, 0.3, 0)
+
+    pos_str = "Left" if pos < 0 else "Right"
+    crl_text = "Radius of curvature (left) = %.1f km" % (left_cr / 1000)
+    crr_text = "Radius of curvature (right) = %.1f km" % (right_cr / 1000)
+    cr_text = "Radius of curvature (avg) = %.1f km" % ((left_cr + right_cr) / 2000)
+    pos_text = "Vehicle is %.1f m %s from the lane center" % (np.abs(pos), pos_str)
+
+    def put_text(image, text, color=(255, 255, 255), ypos=100):
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(image, text, (350, ypos), font, 1, color, 2, cv2.LINE_AA)
+
+    put_text(vis_overlay, crl_text, ypos=50)
+    put_text(vis_overlay, crr_text, ypos=100)
+    put_text(vis_overlay, cr_text, ypos=150)
+    put_text(vis_overlay, pos_text, ypos=200)
+
+    return vis_overlay
+
+
 class LaneLinesTracker(object):
     def __init__(self):
         self.camera = GetCalibratedCamera()
@@ -59,49 +103,6 @@ class LaneLinesTracker(object):
         self.p_overlay.display_elapsed(total_secs)
         self.p_video.display_processing_factor(clip.duration)
 
-    def draw_overlay(self, lane_fitting, undistorted, warped):
-        # get curvature and vehicle position
-        left_cr, right_cr = lane_fitting.get_curvature()
-        pos = lane_fitting.get_vehicle_position()
-
-        # get fitpoints
-        pts_y, left_fitx, right_fitx = lane_fitting.get_fitpoints()
-
-        # Create an image to draw the lines on
-        warp_zero = np.zeros_like(warped).astype(np.uint8)
-        color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
-
-        # Recast the x and y points into usable format for cv2.fillPoly()
-        pts_left = np.array([np.transpose(np.vstack([left_fitx, pts_y]))])
-        pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, pts_y])))])
-        pts = np.hstack((pts_left, pts_right))
-
-        # Draw the lane onto the warped blank image
-        cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
-
-        # Warp the blank back to original image space using inverse perspective matrix (Minv)
-        overlay = self.warper.unwarp(color_warp)
-
-        # Combine the result with the original image
-        vis_overlay = cv2.addWeighted(undistorted, 1, overlay, 0.3, 0)
-
-        pos_str = "Left" if pos < 0 else "Right"
-        crl_text = "Radius of curvature (left) = %.1f km" % (left_cr / 1000)
-        crr_text = "Radius of curvature (right) = %.1f km" % (right_cr / 1000)
-        cr_text = "Radius of curvature (avg) = %.1f km" % ((left_cr + right_cr) / 2000)
-        pos_text = "Vehicle is %.1f m %s from the lane center" % (np.abs(pos), pos_str)
-
-        def put_text(image, text, color=(255, 255, 255), ypos=100):
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(image, text, (350, ypos), font, 1, color, 2, cv2.LINE_AA)
-
-        put_text(vis_overlay, crl_text, ypos=50)
-        put_text(vis_overlay, crr_text, ypos=100)
-        put_text(vis_overlay, cr_text, ypos=150)
-        put_text(vis_overlay, pos_text, ypos=200)
-
-        return vis_overlay
-
     def process_image(self, image):
         # Distortion correction
         self.p_undistort.start()
@@ -127,7 +128,7 @@ class LaneLinesTracker(object):
 
         # Draw Overlay
         self.p_overlay.start()
-        vis_overlay = self.draw_overlay(lane_fitting, undistorted, warped)
+        vis_overlay = draw_overlay(self.warper, lane_fitting, undistorted, warped)
         self.p_overlay.update()
 
         return vis_overlay

@@ -8,6 +8,7 @@ class LaneFit(object):
     # lane size [m]
     lane_width = 3.7
     lane_depth = 30
+    warped_lane_width = 620
 
     # lane polynomials
     left_fit = None
@@ -22,7 +23,7 @@ class LaneFit(object):
 
         # pixel to meters conversions
         self.ym_per_pix = self.lane_depth / self.image_height
-        self.xm_per_pix = self.lane_width / 700
+        self.xm_per_pix = self.lane_width / self.warped_lane_width
 
     def find_lane_pixels(self, binary_warped):
         # Take a histogram of the bottom half of the image
@@ -111,12 +112,16 @@ class LaneFit(object):
             # If you found > minpix pixels, recenter next window on their mean position
             if len(good_left_inds) > minpix:
                 leftx_current = np.int(np.mean(nonzerox[good_left_inds]))
-                if len(good_right_inds) > minpix:
-                    rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
+            if len(good_right_inds) > minpix:
+                rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
 
         # Concatenate the arrays of indices (previously was a list of lists of pixels)
-        left_lane_inds = np.concatenate(left_lane_inds)
-        right_lane_inds = np.concatenate(right_lane_inds)
+        try:
+            left_lane_inds = np.concatenate(left_lane_inds)
+            right_lane_inds = np.concatenate(right_lane_inds)
+        except ValueError:
+            # Avoids an error if the above is not implemented fully
+            pass
 
         # Extract left and right line pixel positions
         leftx = nonzerox[left_lane_inds]

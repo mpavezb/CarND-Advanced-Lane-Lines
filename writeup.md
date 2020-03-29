@@ -63,7 +63,7 @@ To demonstrate this step, I prefered using a selection of chessboard images, ins
 
 ### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image. The filtering is provided by the `EdgeDetector` class in file `src/filtering.py`. The related section on the notebook is `3. Edge Detection`.
+I used a combination of color and gradient thresholds to generate a binary image. The filtering is provided by the `EdgeDetector` class in file `./src/filtering.py`. The related section on the notebook is `3. Edge Detection`.
 
 `EdgeDetector.detect()` method combines the HLS color space (S channel) and a group of sobel filters (x, y, magnitude, and direction) to produce a binary image indicating detected lane lines.
 
@@ -101,19 +101,54 @@ Images below show how the perspective transform applies to an image were the lin
 
 ### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+The lane fitting methods are implemented in the `LaneFit` class, located in the file `./src/lane_fitting.py`. The related section on the notebook is `5-6. Lane Fitting, Curvature and Vehicle Position`.
 
-![alt text][image5]
+The lane fitting implementation is copied from the one provided in the Advanced Computer Vision section of the udacity course. This approach is explained next.
+
+Lane fitting is implemented in `LaneFit.fit_polynomial()` method. First, `LaneFit.find_lane_pixels()` method is used to:
+- Create an histogram of the bottom half of the warped image.
+- The histogram is divided into left and right sections, to look for peaks signaling a high confidence on the pixel where the line is located.
+- Next, a stacked window approach is used to select all pixels which *belong* to each line.
+
+Then, a second order polynomial is fit to the candidate pixels for each line.
+
+Next images show 3 cases, on how the algorithm works over test images with: straight lines, curved lines, and shadow issues. In the last case, the line detection does not fit properly, as the detected edges contain noise from surrounding shadows.
+
+![fitting straight](./output_images/lane_fitting_straight_lines1.jpg)
+![fitting curved](./output_images/lane_fitting_test3.jpg)
+![fitting fail](./output_images/lane_fitting_test5.jpg)
 
 ### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+The radius of curvature and vehicle position computation is implemented in the 
+`LaneFit` class from the previous section. The related section on the notebook is `5-6. Lane Fitting, Curvature and Vehicle Position`.
+
+The radius of curvature computation is implemented in method `LaneFit.get_curvature()`. Computation is based on equations provided in the course. The evaluation point is the bottom of the image. The following values were assumed:
+- Real lane width: 3.7 m
+- Real lane depth on warped image: 30 m
+- Width of warped lane: 620 px  (this value is measured by hand on `output_images/warp_straight_lines2.jpg`)
+
+Vehicle position is computed in method `LaneFit.get_vehicle_position()`. Camera is assumed to be exactly to the center of the car. Left and right polynomials are evaluated to the bottom pixel, to get the left and right line positions. Based on this, vehicle position is compared with the middle point between both lines.
+
+Examples on both computed values is already displayed on examples of the previous section.
+
 
 ### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+This is implemented in the `draw_overlay` function in file `./src/lane_tracker.py`. The related section on the notebook is `7-8. Overlay results in original image`.
 
-![alt text][image6]
+Below are examples of the overlay on all test images.
+
+![overlay](./output_images/overlay_straight_lines1.jpg)
+![overlay](./output_images/overlay_straight_lines2.jpg)
+![overlay](./output_images/overlay_test1.jpg)
+![overlay](./output_images/overlay_test2.jpg)
+![overlay](./output_images/overlay_test3.jpg)
+![overlay](./output_images/overlay_test4.jpg)
+![overlay](./output_images/overlay_test5.jpg)
+![overlay](./output_images/overlay_test6.jpg)
+
+
 
 ---
 
@@ -130,9 +165,4 @@ Here's a [link to my video result](./project_video.mp4)
 ### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.
-  
 
-# Perspective Transformation
-
-- src,dest points are tuned using `test_images/straight_lines1.jpg` and `test_images/straight_lines2.jpg`.
-- warp is validated using the remaining test images.
