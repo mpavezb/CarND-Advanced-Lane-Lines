@@ -63,9 +63,23 @@ To demonstrate this step, I prefered using a selection of chessboard images, ins
 
 ### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+I used a combination of color and gradient thresholds to generate a binary image. The filtering is provided by the `EdgeDetector` class in file `src/filtering.py`. The related section on the notebook is `3. Edge Detection`.
 
-![alt text][image3]
+`EdgeDetector.detect()` method combines the HLS color space (S channel) and a group of sobel filters (x, y, magnitude, and direction) to produce a binary image indicating detected lane lines.
+
+The S channel is able to detect lane lines on bright images, but strong shadows are also added to the binary. This channel is usually not able to detect small lane lines on the back of the image. The threshold was tuned to remove the car and also be effective for bright (`test_images/test1.jpg`) and dark (`test_images/test2.jpg`) images.
+
+The sobel filter is composed of X, Y, magnitude, and direction components. These are computed based on the `cv2.Sobel` result over gray images. The kernel size and thresholds were tuned to remove as much noise as possible from the test images, without compromissing the lane detection. Particularlly, the direction gradient threshold was tunned to work effectivelly on the test road images. As grayscale images are used as input to the filter, Sobel performs poorly on bright images.
+
+The next figure shows an example where the edge detection performs well enough. 
+![edges a](./output_images/edge_detection_straight_lines2_result.jpg)
+
+This figure is an example were the S channel is not able to properly detect the right line. 
+![edges b](./output_images/edge_detection_test2_result.jpg)
+
+In this last example, the S channel detects the lines, but also shadow is added to the output. The gradient fails to detect the lines on the bright section. However, the overall result is still acceptable.
+![edges c](./output_images/edge_detection_test4_result.jpg)
+
 
 ### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
@@ -128,26 +142,6 @@ Here's a [link to my video result](./project_video.mp4)
 ### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.
-
-
-# Lane Detection: Sobel + HSL
-
-- Sobel:
-  - Gradient threshold needs to be tunned to detect lanes
-    in a proper angle (+/-) 60 deg.
-  - Pros
-	- Can detect small dashed lanes on the back.
-  - Cons:
-	- Lanes are not filtered on bright images => Useless in this case.
-	- Sobel pipeline is expensive.
-- HLS: S Channel:
-  - Tuning:
-    - tune using test1 (light), test2 (dark)
-    - make sure to remove the capo with the threshold
-  - Pros:
-  - Cons:
-	- Shadows are present in the binary
-	- Not good at detecting some dashed white lanes on the back of the image.
   
 
 # Perspective Transformation
