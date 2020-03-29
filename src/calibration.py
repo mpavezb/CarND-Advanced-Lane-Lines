@@ -163,6 +163,8 @@ class WarpMachine:
     top = 460
     top_left = 580
     top_right = 705
+    dst_l = 320
+    dst_r = 960
 
     def __init__(self):
         h = self.h
@@ -171,9 +173,11 @@ class WarpMachine:
         t = self.top
         tl = self.top_left
         tr = self.top_right
+        dl = self.dst_l
+        dr = self.dst_r
 
         self.src = np.float32([[l, h], [tl, t], [tr, t], [r, h]])
-        self.dst = np.float32([[l, h], [l, 0], [r, 0], [r, h]])
+        self.dst = np.float32([[dl, h], [dl, 0], [dr, 0], [dr, h]])
         self.M = cv2.getPerspectiveTransform(self.src, self.dst)
         self.Minv = cv2.getPerspectiveTransform(self.dst, self.src)
 

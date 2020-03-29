@@ -134,6 +134,10 @@ def RunPerspectiveTransformExample():
         # Save
         save_image(vis, fname, "warp_")
 
+    out_fname = os.path.join("output_images", "warp.png")
+    Log.info("Saving figure to %s" % out_fname)
+    plt.savefig(out_fname)
+
     Log.subsection("Display")
     plt.show()
 

@@ -19,11 +19,11 @@ def main():
     # RunCalibrationExample()
     # RunDistortionCorrectionExample()
     # RunEdgeDetectionExample()
-    # RunPerspectiveTransformExample()
+    RunPerspectiveTransformExample()
     # RunLaneFittingExample()
     # RunFullPipelineExample()
 
-    ProcessProjectVideo(subclip_seconds=0.5)
+    # ProcessProjectVideo(subclip_seconds=0.5)
 
 
 if __name__ == "__main__":
