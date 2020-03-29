@@ -47,15 +47,19 @@ Next figure shows all chessboard images used for calibration, for which opencv w
 
 ![calibration example](./output_images/calibration.png)
 
+An example of the distortion correction can be found on the next section.
+
 
 ## Pipeline (single images)
 
 ### 1. Provide an example of a distortion-corrected image.
 
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
-![alt text][image2]
+As noted above, the distortion correction is handled by the `CameraModel.undistort()` method. The related section on the notebook is `2. Distortion Correction`.
 
-![distortion correction example][./output_images/distortion_correction.png]
+To demonstrate this step, I prefered using a selection of chessboard images, instead of the road images located in `test_images`. The correction effect is easier to appreciate on the grid provided by a chessboard, than in weak lanes present on road images. *If needed, distortion correction examples over road images can be found on the following sections, were the undistorted image is used as the baseline for every computation.*
+
+![distortion correction example](./output_images/distortion_correction.png)
+
 
 ### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
