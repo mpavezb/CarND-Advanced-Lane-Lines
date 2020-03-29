@@ -156,7 +156,9 @@ Below are examples of the overlay on all test images.
 
 ### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+The video processing pipeline is implemented by the `LaneLinesTracker` class in file `./src/lane_tracker.py`. The related section on the notebook is `9. Project Video`.
+
+Here's a [link to my video result](./output_videos/project_video_writeup.mp4)
 
 ---
 
@@ -165,4 +167,19 @@ Here's a [link to my video result](./project_video.mp4)
 ### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.
+
+**Shortcomings**
+- The implemented pipeline is not using information from previous frames, so:
+  - There is no low pass filter implemented for the polynomials.
+  - There is no optimization based on polynomial confidence.
+- The following assumptions are made:
+  - Car is not doing a lane departure maneuver.
+  - Daylight/Shadow contitions as in the sample images.
+  - There is no car directly in front.
+  - Lines are not occluded.
+  - There is always 2 lane lines.
+
+**Improvements**
+- Edge detection can be improved to further remove noise. For instance, morphologic operations can help to remove lonely pixels.
+- Healthy checks can be added over the detected lane polynomials, to discriminate based on curvature, position or on how parallel the lines are.
 

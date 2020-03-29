@@ -21,9 +21,9 @@ def main():
     # RunEdgeDetectionExample()
     # RunPerspectiveTransformExample()
     # RunLaneFittingExample()
-    RunFullPipelineExample()
+    # RunFullPipelineExample()
 
-    # ProcessProjectVideo(subclip_seconds=0.5)
+    ProcessProjectVideo(subclip_seconds=None)
 
 
 if __name__ == "__main__":
