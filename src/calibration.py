@@ -132,10 +132,9 @@ class CameraModel:
 
     def get_calibration(self, w, h):
         # Use cached
-        if w is self.cal_w and h is self.cal_h:
-            Log.debug("Using Cached")
+        if w == self.cal_w and h == self.cal_h:
             return self.mtx, self.dist
-        Log.debug("Computing")
+        Log.info("Computing camera calibration parameters for (w,h)=(%d,%d)" % (w, h))
 
         # Compute
         [_, self.mtx, self.dist, _, _] = cv2.calibrateCamera(
@@ -144,6 +143,7 @@ class CameraModel:
 
         self.cal_w = w
         self.cal_h = h
+
         return self.mtx, self.dist
 
     def undistort(self, img):

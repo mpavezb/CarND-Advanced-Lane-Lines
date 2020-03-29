@@ -1,0 +1,7 @@
+project_video_output_v1
+ - Total Time                    :  0:04:43.821361
+ - Distortion  Correction        :  0:00:26.817074
+ - Edge Detection                :  0:03:20.457879
+ - Perspective Transform         :  0:00:06.148032
+ - Lane Fitting                  :  0:00:28.037893
+ - Overlay Drawing               :  0:00:15.491974
